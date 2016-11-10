@@ -1,0 +1,27 @@
+html{
+ background-color:grey;
+}
+h1{
+  color:purple;
+  text-align:center;
+  background-color:black;
+}
+h2{
+  background-color:red;
+  text-align:center;
+}
+img{
+  height:300px;
+}
+#dealerTable{
+  display:flex;
+  height:300px;
+  margin:2em;
+  background-color:bisque;
+}
+#playerTable{
+  display:flex;
+  height:300px;
+  margin:2em;
+  background-color:bisque;
+}
