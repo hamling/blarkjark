@@ -1,36 +1,30 @@
 <!DOCTYPE html>
-<html >
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Black Jack </title>
-
-
-
-      <link rel="stylesheet" href="css/style.css">
-
-
+   <title>Hamlin's BlackJack Thing</title>
+   <link rel="stylesheet" href="style.css">
+   <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+   <script type="text/javascript" src="script.js"></script>
 </head>
-
 <body>
-  <html>
-  <h1> Black Jack </h1>
-    <body>
-      <button id="deal"> Deal </button>
-      <button id="hit"> Hit </button>
-      <button id="stand"> Stephen King </button>
-      <button id="restart"> Restart </button>
-      <h2> Dealer Table </h2>
-      <div id="dealerTable">
-      </div>
-      <h2> Player Table </h2>
-      <div id="playerTable">
-      </div>
-      <p id="playerValue">Value GOes HeRe</p>
-      </body>
-    </html>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
 
-      <script src="js/index.js"></script>
+<header>
+  <button id="deal">Deal</button>
+  <button id="hit">Hit</button>
+  <button id="stand">Stand</button>
+
+  <p id="info"></p>
+
+</header>
+
+<section class="casino">
+  <div class="cardTable" id="dealerTable">
+
+  </div>
+  <div class="cardTable" id="playerTable">
+
+  </div>
+</section>
 
 </body>
 </html>
