@@ -39,10 +39,28 @@ function cardNumericValue(card)
 function handValue(cards)
 {
     var sum = 0;
+    var aceCount = 0;
+
     for (var i = 0; i < cards.length; i++)
     {
-        sum = sum + cardNumericValue(cards[i]);
+        var c = cardNumericValue(cards[i]);
+        if (c === 1)
+        {
+            c = 11;
+            aceCount++;
+        }
+        sum = sum + c;
     }
+
+    while (sum > 21 && aceCount > 0)
+    {
+      console.log("Demoting Ace");
+      sum -= 10;
+      aceCount--;
+    }
+
+    console.log("Value: " + sum);
+
     return sum;
 }
 

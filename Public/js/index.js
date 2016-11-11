@@ -47,7 +47,7 @@ $(document).ready(function() {
                 $.getJSON("http://127.0.0.1:8081/deal", {}, function(gameData, status) {
 
 
-                    $('#playerValue').text("Player Value: " + gameData.playerHandValue);
+                    $('#info').text("State: " + gameData.state);
 
                     for (var i = 0; i < gameData.table.playersHand.length; i++) {
                         addCardToPlayer(gameData.table.playersHand[i]);
@@ -66,8 +66,9 @@ $(document).ready(function() {
               clearTable();
                 $.getJSON("http://127.0.0.1:8081/hit", {}, function(gameData, status) {
 
+                    $('#info').text("State: " + gameData.state);
+
                     if (gameData.state === "busted") {
-                       $('#playerValue').text("Player Busts the heck out of it");
                        $('#hit').prop("disabled", true);
                     }
                     else {
