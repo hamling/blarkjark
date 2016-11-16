@@ -1,130 +1,67 @@
 var express = require('express');
 
-var decks = {};
-
-var deck = [];
-
-var gameData = {};
-
 var values = ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King"];
 var suits = ["Spades", "Hearts", "Clubs", "Diamonds"];
 
-var nextDeckNumber = 1;
+var nextSessionNumber = 1;
 
-function getIndexOfValue(arr, value)
-{
-    for (var i = 0; i < arr.length; i++)
-    {
-        if (arr[i] === value) {
-           return i;
+function sessionId() {
+    var id = "Session" + nextSessionNumber;
+    nextSessionNumber++;
+    return id;
+}
+
+function createSessionData() {
+    var sessionData = {
+        deck: [],
+        gameData: {
+            id: sessionId()
         }
-    }
-
-    return undefined;
+    };
+    return sessionData;
 }
 
-function cardNumericValue(card)
-{
-    var idx = getIndexOfValue(values, card.value);
-
-    idx = idx + 1;
-
-    if (idx > 10) {
-        idx = 10;
-    }
-
-    return idx;
+function cardNumericValue(card) {
+    var num = values.indexOf(card.value) + 1;
+    return num > 10 ? 10 : num;
 }
 
-function handValue(cards)
-{
+function handValue(cards) {
+
     var sum = 0;
-    var aceCount = 0;
+    var aces = 0;
 
-    for (var i = 0; i < cards.length; i++)
-    {
-        var c = cardNumericValue(cards[i]);
-        if (c === 1)
-        {
-            c = 11;
-            aceCount++;
+    for (var i = 0; i < cards.length; i++) {
+        var val = cardNumericValue(cards[i]);
+        if (val == 1) {
+            val = 11;
+            aces++;
         }
-        sum = sum + c;
+        sum = sum + val;
     }
 
-    while (sum > 21 && aceCount > 0)
-    {
-      console.log("Demoting Ace");
-      sum -= 10;
-      aceCount--;
+    while (aces > 0 && sum > 21) {
+        aces--;
+        sum -= 10;
     }
-
-    console.log("Value: " + sum);
 
     return sum;
 }
 
 
 function valueToImageLetter(value) {
-    if (value == "Jack" || value == "Queen" || value == "King" || value == "Ace") {
-        return value[0];
-    }
-
-    switch (value) {
-        case "Two":
-            return "2";
-        case "Three":
-            return "3";
-        case "Four":
-            return "4";
-        case "Five":
-            return "5";
-        case "Six":
-            return "6";
-        case "Seven":
-            return "7";
-        case "Eight":
-            return "8";
-        case "Nine":
-            return "9";
-        case "Ten":
-            return "0";
-        default:
-            console.log("Problem with my switch statement in valueToImageLetter");
-            return "Arrgh";
-    }
+    var letters = "A234567890JQK";
+    return letters[values.indexOf(value)];
 }
 
-function deckId() {
-    var id = "Deck" + nextDeckNumber;
-    nextDeckNumber++;
-    return id;
+function drawCard(deck) {
+    var randomIndex = Math.floor(Math.random() * deck.length);
+    var card = deck[randomIndex];
+    deck.splice(randomIndex, 1);
+    return card;
 }
 
-function drawCard(){
-  var randomNumber = Math.random();
-
-  var randomIndex = Math.floor(randomNumber * deck.length);
-
-  var card = deck[randomIndex];
-
-  deck.splice(randomIndex, 1);
-
-  return card;
-
-}
-/*function deal(){
-  $.getJSON("http://127.0.0.1:8081/draw", { } , function(data, status)
-  {
-    console.log(data);
-    console.log(status);
-    var suit = data.suit;
-    var value = data.value;
-    var image= data.image
-}
-)};
-*/
-function shuffle() {
+function buildDeck() {
 
     var cards = [];
 
@@ -144,111 +81,72 @@ function shuffle() {
     return cards;
 }
 
-deck = shuffle();
-//console.log(cards);
-
-//console.log(Math.random());
-
 var app = express();
 
+var sessionData;
 
-/*
-app.get('/', function (req, res) {
-   console.log(req.query);
-   console.log(req.headers);
-   var name = req.query.name;
-   res.send('Hello: ' + name);
-});
-*/
 app.get('/deal', function(req, res) {
-  gameData.state = "newGame";
-  gameData.table = {
 
-    playersHand:[drawCard(),drawCard()],
-    dealersHand:[{image:"http://www.jimknapp.com/Cards/Non-Bicycle_files/image002.jpg"}, drawCard()]
-  };
+    sessionData = createSessionData();
 
-    gameData.playerHandValue = handValue(gameData.table.playersHand);
+    sessionData.deck = buildDeck();
 
-    res.send(gameData);
+    sessionData.gameData.state = "newGame";
 
+    sessionData.gameData.table = {
+        playersHand: [drawCard(sessionData.deck), drawCard(sessionData.deck)],
+        dealersHand: [{
+            image: "http://www.jimknapp.com/Cards/Non-Bicycle_files/image002.jpg"
+        }, drawCard(sessionData.deck)]
+    };
 
+    sessionData.gameData.playersHandValue = handValue(sessionData.gameData.table.playersHand);
+
+    res.send(sessionData.gameData);
 });
+
 app.get('/stand', function(req, res) {
 
+    var gameData = sessionData.gameData;
+
+    // turn dealer card face up
+    gameData.table.dealersHand.splice(0, 1);
+    gameData.table.dealersHand.push(drawCard(sessionData.deck));
+
+    // dealer draws while hand value < 17
+    gameData.dealersHandValue = handValue(gameData.table.dealersHand);
+    while (gameData.dealersHandValue < 17) {
+        gameData.table.dealersHand.push(drawCard(sessionData.deck));
+        gameData.dealersHandValue = handValue(gameData.table.dealersHand);
+    }
+
+    // determine winner
+    if (gameData.dealersHandValue === gameData.playersHandValue) {
+        gameData.state = "push";
+    } else if (gameData.playersHandValue > gameData.dealersHandValue || gameData.dealersHandValue > 21) {
+        gameData.state = "playerWins";
+    } else {
+        gameData.state = "dealerWins";
+    }
+
     res.send(gameData);
-
 });
-
-app.get('/shuffle', function(req, res) {
-
-    deck = shuffle();
-
-    res.send(gameData);
-
-});
-
 
 app.get('/hit', function(req, res) {
-  gameData.state = "inGame";
+    sessionData.gameData.state = "inGame";
 
-  gameData.table.playersHand.push(drawCard());
+    sessionData.gameData.table.playersHand.push(drawCard(sessionData.deck));
 
-  gameData.playerHandValue = handValue(gameData.table.playersHand);
+    sessionData.gameData.playersHandValue = handValue(sessionData.gameData.table.playersHand);
 
-    if (gameData.playerHandValue > 21)
-    {
-        gameData.state = "busted";
-    }
+    if (sessionData.gameData.playersHandValue > 21) {
+        sessionData.gameData.state = "busted";
+    };
 
-    res.send(gameData);
-
+    res.send(sessionData.gameData);
 });
-
-app.get('/stand', function(req, res) {
-
-   // do the server side stuff for stand
-
-   // set game state to whoever won
-
-});
-
-app.get('/draw', function(req, res) {
-
-    if (deck.length === 0) {
-        res.send({
-            success: false
-        });
-    } else {
-        var randomNumber = Math.random();
-
-        // we want 0 to cards.length-1
-
-        var randomIndex = Math.floor(randomNumber * deck.length);
-
-        var card = deck[randomIndex];
-
-        // remove the card from the deck
-
-        deck.splice(randomIndex, 1);
-
-        card.remaining = deck.length;
-        card.success = true;
-
-        card.image = "https://deckofcardsapi.com/static/img/" + valueToImageLetter(card.value) + card.suit[0] + ".png";
-
-        console.log(card.image);
-
-        var json = JSON.stringify(card);
-
-        res.send(json);
-    }
-});
-
 
 app.use(express.static('public'));
-
-
 
 var server = app.listen(8081, function() {
     var host = server.address().address;

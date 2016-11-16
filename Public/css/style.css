@@ -11,17 +11,19 @@ h2{
   text-align:center;
 }
 img{
-  height:300px;
+  height:150px;
 }
 #dealerTable{
   display:flex;
-  height:300px;
+  height:150px;
   margin:2em;
+  padding:1em;
   background-color:bisque;
 }
 #playerTable{
   display:flex;
-  height:300px;
+  height:150px;
   margin:2em;
+  padding:1em;
   background-color:bisque;
 }

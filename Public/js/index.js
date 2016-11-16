@@ -1,103 +1,101 @@
 $(document).ready(function() {
 
-            //var deckId = "s4gxjpl1rn0v";
-            //var drawCardUrl = "https://deckofcardsapi.com/api/deck/" + deckId + "/draw/";
-            //var shuffleDeckUrl = "https://deckofcardsapi.com/api/deck/" + deckId + "/shuffle/";
+    function clearTable() {
+        $("#dealerTable img").remove();
+        $("#playerTable img").remove();
+    }
 
-            function drawCard() {
-                $.getJSON("http://127.0.0.1:8081/draw", {}, function(data, status) {
-                    console.log(data);
-                    console.log(status);
-                    var suit = data.suit;
-                    var value = data.value;
-                    var image = data.image;
-                });
-                return {}
-            }
+    function addCardToDealer(card) {
+        $("#dealerTable").append('<img> </img>')
+        $("#dealerTable > img:last").attr("src", card.image)
+    }
 
-            function addCardToDealer(card) {
-                $("#dealerTable").append('<img> </img>')
-                $("#dealerTable > img:last").attr("src", card.image)
-            }
+    function addCardToPlayer(card) {
+        $("#playerTable").append('<img> </img>')
+        $("#playerTable > img:last").attr("src", card.image)
+    }
 
-            function addFaceDownCardToDealer() {
-                $("#dealerTable").append('<img src="http://www.murphysmagicsupplies.com/images_email/Mandolin_BACK.jpg"> </img>')
+    function updateCards(table) {
 
-            }
+        for (var i = 0; i < table.playersHand.length; i++) {
+            addCardToPlayer(table.playersHand[i]);
+        }
 
+        for (var i = 0; i < table.dealersHand.length; i++) {
+            addCardToDealer(table.dealersHand[i]);
+        }
+    }
 
-            function addCardToPlayer(card) {
-                $("#playerTable").append('<img> </img>')
-                $("#playerTable > img:last").attr("src", card.image)
+    function updateState(newState)
+    {
+      switch (newState)
+      {
+         case "newGame":
+         case "inGame":
+           $('#hit').prop("disabled", false);
+           $('#stand').prop("disabled", false);
+           $('#deal').prop("disabled", true);
+           break;
+         case "busted":
+         case "playerWins":
+         case "dealerWins":
+         case "push":
+           $('#hit').prop("disabled", true);
+           $('#stand').prop("disabled", true);
+           $('#deal').prop("disabled", false);
+           break;
+         default:
+           // not sure what to do here
+           $('#info').text("State: " + newState + " HOW DO I HANDLE THIS!!!");
+           break;
+      }
 
-            }
+      switch (newState)
+      {
+         case "newGame":
+         case "inGame":
+           $('#info').text("Do you want to Hit or Stand?");
+           break;
+         case "busted":
+           $('#info').text("Sorry... you Busted!");
+           break;
+         case "playerWins":
+           $('#info').text("You somehow managed to Win!");
+           break;
+         case "dealerWins":
+           $('#info').text("You are a clearly a Loser!");
+           break;
+         case "push":
+           $('#info').text("It is a push... I'm sure you'll lose next time...");
+           break;
+         default:
+           // not sure what to do here
+           $('#info').text("State: " + newState + " HOW DO I HANDLE THIS!!!");
+           break;
+      }
+    }
 
-            $('#stand').click(function() {
-                $('#hit').prop("disabled", true);
-                $.getJSON("http://127.0.0.1:8081/stand", {}, function(gameData, status) {
+    $("#deal").click(function() {
+        clearTable();
+        $.getJSON("deal", {}, function(gameData, status) {
+            updateState(gameData.state);
+            updateCards(gameData.table);
+        });
+    });
 
-                      // TODO
-                });
+    $("#hit").click(function() {
+        clearTable();
+        $.getJSON("hit", {}, function(gameData, status) {
+            updateState(gameData.state);
+            updateCards(gameData.table);
+        });
+    });
 
-            });
-
-            $("#deal").click(function() {
-                $('#hit').prop("disabled", false);
-                clearTable();
-                $.getJSON("http://127.0.0.1:8081/deal", {}, function(gameData, status) {
-
-
-                    $('#info').text("State: " + gameData.state);
-
-                    for (var i = 0; i < gameData.table.playersHand.length; i++) {
-                        addCardToPlayer(gameData.table.playersHand[i]);
-                    }
-
-                    for (var x = 0; x < gameData.table.dealersHand.length; x++) {
-                        addCardToDealer(gameData.table.dealersHand[x]);
-                    }
-
-                });
-
-            });
-
-
-            $("#hit").click(function() {
-              clearTable();
-                $.getJSON("http://127.0.0.1:8081/hit", {}, function(gameData, status) {
-
-                    $('#info').text("State: " + gameData.state);
-
-                    if (gameData.state === "busted") {
-                       $('#hit').prop("disabled", true);
-                    }
-                    else {
-                      // look at gameData.status and do something clever
-                      $('#playerValue').text("Player Value: " + gameData.playerHandValue);
-                    }
-
-                    for (var i = 0; i < gameData.table.playersHand.length; i++) {
-                        addCardToPlayer(gameData.table.playersHand[i]);
-                    }
-                    for (var x = 0; x < gameData.table.dealersHand.length; x++) {
-                        addCardToDealer(gameData.table.dealersHand[x]);
-                    }
-
-                });
-              });
-                function clearTable() {
-                    $("img").remove();
-                }
-
-                $("#restart").click(function() {
-
-                    clearTable();
-
-                });
-            });
-
-            // move json to deal button
-            //call json
-            //edit hit function
-            //modify server to display a different card by making a image
-            //
+    $('#stand').click(function() {
+        clearTable();
+        $.getJSON("stand", {}, function(gameData, status) {
+            updateState(gameData.state);
+            updateCards(gameData.table);
+        });
+    });
+});
