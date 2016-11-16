@@ -1,5 +1,7 @@
 $(document).ready(function() {
 
+    var sessionId = "Unset";
+
     function clearTable() {
         $("#dealerTable img").remove();
         $("#playerTable img").remove();
@@ -75,27 +77,47 @@ $(document).ready(function() {
       }
     }
 
+    function buttonHandler(url)
+    {
+      clearTable();
+      $.getJSON(url, {}, function(gameData, status) {
+          updateState(gameData.state);
+          updateCards(gameData.table);
+      });
+    }
+
     $("#deal").click(function() {
-        clearTable();
-        $.getJSON("deal", {}, function(gameData, status) {
-            updateState(gameData.state);
-            updateCards(gameData.table);
-        });
+      clearTable();
+      $.getJSON("deal", {}, function(gameData, status) {
+
+          sessionId = gameData.id;
+
+          console.log(gameData.id);
+
+          updateState(gameData.state);
+          updateCards(gameData.table);
+      });
     });
 
     $("#hit").click(function() {
+
+        // somehow send that id back to the server
         clearTable();
-        $.getJSON("hit", {}, function(gameData, status) {
+        $.getJSON("hit", { id:sessionId }, function(gameData, status) {
+
             updateState(gameData.state);
             updateCards(gameData.table);
         });
     });
 
     $('#stand').click(function() {
-        clearTable();
-        $.getJSON("stand", {}, function(gameData, status) {
-            updateState(gameData.state);
-            updateCards(gameData.table);
-        });
+
+              // somehow send that id back to the server
+              clearTable();
+              $.getJSON("stand", { id:sessionId }, function(gameData, status) {
+      
+                  updateState(gameData.state);
+                  updateCards(gameData.table);
+              });
     });
 });

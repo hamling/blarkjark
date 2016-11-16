@@ -5,6 +5,8 @@ var suits = ["Spades", "Hearts", "Clubs", "Diamonds"];
 
 var nextSessionNumber = 1;
 
+var sessions = {};
+
 function sessionId() {
     var id = "Session" + nextSessionNumber;
     nextSessionNumber++;
@@ -18,6 +20,12 @@ function createSessionData() {
             id: sessionId()
         }
     };
+
+    // put it in the sessions collection
+    sessions[sessionData.gameData.id] = sessionData;
+
+    console.log(sessions);
+
     return sessionData;
 }
 
@@ -83,11 +91,10 @@ function buildDeck() {
 
 var app = express();
 
-var sessionData;
 
 app.get('/deal', function(req, res) {
 
-    sessionData = createSessionData();
+    var sessionData = createSessionData();
 
     sessionData.deck = buildDeck();
 
@@ -106,6 +113,12 @@ app.get('/deal', function(req, res) {
 });
 
 app.get('/stand', function(req, res) {
+
+    console.log("Got Session ID: " + req.query.id);
+
+    // get the user's sessionData
+
+    var sessionData = sessions[req.query.id];
 
     var gameData = sessionData.gameData;
 
@@ -133,6 +146,9 @@ app.get('/stand', function(req, res) {
 });
 
 app.get('/hit', function(req, res) {
+
+    var sessionData = sessions[req.query.id];
+
     sessionData.gameData.state = "inGame";
 
     sessionData.gameData.table.playersHand.push(drawCard(sessionData.deck));
